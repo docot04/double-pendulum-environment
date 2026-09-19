@@ -32,9 +32,36 @@ int main() {
     float input = 0.0f;
     char buffer[32];
 
-    // main simulation loop
-    while (1) {
 
+    int running = 1;
+    int keyboard_input = 0;
+
+    // main simulation loop
+    while (running) {
+
+        //keyboard input
+        SDL_Event event;
+
+        while (SDL_PollEvent(&event)) {            
+            if (event.type == SDL_QUIT)
+                running = 0;
+
+            if (event.type == SDL_KEYDOWN) {                
+                if (event.key.keysym.sym == SDLK_a)
+                    keyboard_input = -1;
+                if (event.key.keysym.sym == SDLK_d)
+                    keyboard_input = 1;
+            }
+
+            if (event.type == SDL_KEYUP) {
+                if (event.key.keysym.sym == SDLK_a || event.key.keysym.sym == SDLK_d)
+                    keyboard_input = 0;
+            }
+        }
+
+        if (keyboard_input != 0)
+            input = (float)keyboard_input;
+        
         // read action from non-blocking stdin, returns immediately if no data received
         ssize_t n = read(STDIN_FILENO, buffer, sizeof(buffer) - 1);
         if (n > 0) {
