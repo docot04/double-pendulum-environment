@@ -4,8 +4,8 @@
 #include <SDL2/SDL.h>
 #include "physics.h"
 
-#define CART_WIDTH       80
-#define CART_HEIGHT      40
+#define CART_WIDTH       40
+#define CART_HEIGHT      20
 #define JOINT_SIZE       16
 #define POLE_THICKNESS   6
 #define GROUND_Y         450
