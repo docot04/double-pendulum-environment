@@ -13,18 +13,16 @@ EnvParams env = {
 /**
  * Initialize the physical state
  * 
- * starts the cart at rest and places the poles almost upright with a small random angular perturbation
+ * Starts the cart at rest and places the poles almost upright with a small random angular perturbation
  */
 void physics_init(State *state) {
 
     // seed random number generator with time() + clock()
     srand((unsigned int)(time(NULL) ^ clock()));
 
-
     // initial cart state
     state->x = 0.0f;
     state->x_dot = 0.0f;
-
 
     // initial pole angle (start upright with a slighht angular perturbation
     // ([-0.02, 0.02] radians or approximately ±1.15 degrees))
@@ -36,7 +34,9 @@ void physics_init(State *state) {
     state->t2_dot = 0.0f;
 }
 
-// calculate accelerations 
+/**
+ * Calculate accelerations 
+ */
 static void get_accels(const State *state, float F, float *x_acc, float *t1_acc, float *t2_acc) {
 
     // trigonometric values for t1 and t2
@@ -119,7 +119,6 @@ static void get_accels(const State *state, float F, float *x_acc, float *t1_acc,
     // t2_ddot = [ a(dw - ev) - b(bw - cv) + u(be - cd) ] / det(M)
     *t2_acc =(a * (d*w - e*v) - b * (b*w - c*v) + u * (b*e - c*d)) / det;
 }
-
 
 /**
  * Advance the physics simulation by dt seconds
