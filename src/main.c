@@ -6,6 +6,11 @@ int main() {
     // initialize the physics environment
     physics_init(&state);
 
+    // initialize Renderer
+    Renderer renderer;
+    if (!renderer_init(&renderer, 900, 600))
+        return 1;
+
     // make stdin non blocking to continue the simulation even if no action is passed
     int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
 
@@ -65,6 +70,7 @@ int main() {
 
         // advance physics by 1/fps of a second
         physics_step(&state, input, DT);
+        renderer_draw(&renderer, &state);
 
         // send state to stdout
         // format: x x_dot t1 t1_dot t2 t2_dot
@@ -74,5 +80,6 @@ int main() {
         // pause for 1/30 seconds
         nanosleep(&sleep_time, NULL);
     }
+    renderer_destroy(&renderer);
     return 0;
 }
