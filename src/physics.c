@@ -1,13 +1,13 @@
-#include "physics.h"
+#include "pendulum.h"
 
 EnvParams env = {
-    .g = 9.81f,
-    .M = 2.5f,
-    .max_F = 25.0f,
-    .m1 = 1.0f,
-    .m2 = 0.5f,
-    .L1 = 1.0f,
-    .L2 = 1.0f
+    .g = GRAVITY_ACCL,
+    .M = CART_MASS,
+    .max_F = CART_ACTUATION_FORCE,
+    .m1 = POLE1_MASS,
+    .m2 = POLE2_MASS,
+    .L1 = POLE1_LENGTH,
+    .L2 = POLE2_LENGTH
 };
 
 /**

@@ -1,6 +1,4 @@
-#include "renderer.h"
-#include <stdio.h>
-#include <math.h>
+#include "pendulum.h"
 
 static void draw_pole(SDL_Renderer *renderer, int x1, int y1, int x2, int y2) {
     float dx = (float)(x2 - x1);
