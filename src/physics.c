@@ -86,7 +86,7 @@ static void get_accels(const State *state, float F, float *x_acc, float *t1_acc,
     // f = m2 * L2²
     float f = env.m2 * env.L2 * env.L2;
 
-    // FORCE VECTOR COMPONENTS (including gravity torque pointing upright)
+    // FORCE VECTOR COMPONENTS
 
     // cart equation
     // u = F + [(m1 + m2) * L1 * t1_dot² * sin(t1)] + [m2 * L2 * t2_dot² * sin(t2)]
@@ -112,11 +112,11 @@ static void get_accels(const State *state, float F, float *x_acc, float *t1_acc,
     *x_acc = (u * (d*f - e*e) - b * (v*f - w*e) + c * (v*e - w*d)) / det;
     
     // pole 1 angular acceleration
-    // t2_dot = [ a(vf - we) - u(bf - ce) + c(bw - cv) ] / det(M)
+    // t1_ddot = [ a(vf - we) - u(bf - ce) + c(bw - cv) ] / det(M)
     *t1_acc =(a * (v*f - w*e) - u * (b*f - c*e) + c * (b*w - c*v)) / det;
     
     // pole 2 angular acceleration
-    // t2_dot = [ a(dw - ev) - b(bw - cv) + u(be - cd) ] / det(M)
+    // t2_ddot = [ a(dw - ev) - b(bw - cv) + u(be - cd) ] / det(M)
     *t2_acc =(a * (d*w - e*v) - b * (b*w - c*v) + u * (b*e - c*d)) / det;
 }
 
@@ -152,7 +152,7 @@ void physics_step(State *state, float input_normalized,float dt) {
         // velocity = old velocity + acceleration * dt (here time = h)
         state->x_dot = state->x_dot + x_acc * h;
         state->t1_dot = state->t1_dot + t1_acc * h;
-        state->t1_dot = state->t1_dot + t2_acc * h;
+        state->t2_dot = state->t2_dot + t2_acc * h;
 
         // 4. applying slight numerical damping
         // (added to prevent numerical errors from continuously injecting energy into the simulation.)
