@@ -9,9 +9,11 @@
 #include <math.h>
 #include <SDL2/SDL.h>
 #include <errno.h>
+#include <string.h>
 
 // math
 #define PI 3.14159265358979323846f
+#define SQR(x) ((x) * (x))
 
 // simulation
 #define FPS 30
@@ -19,12 +21,26 @@
 
 // environment
 #define GRAVITY_ACCL 9.81f
-#define CART_MASS 2.5f
-#define CART_ACTUATION_FORCE 25.0f
-#define POLE1_MASS 1.0f
-#define POLE2_MASS 0.5f
-#define POLE1_LENGTH 1.0F
-#define POLE2_LENGTH 1.0F
+#define CART_MASS 1.5f
+#define CART_ACTUATION_FORCE 20.0f
+#define POLE1_MASS 0.5f
+#define POLE2_MASS 0.25f
+#define POLE1_LENGTH 0.8F
+#define POLE2_LENGTH 0.8F
+
+// task parameters
+#define RAIL_LIMIT 5.0f
+#define MAX_EPISODE_TIME 10.0f
+#define SUCCESS_ANGLE (5.0f * PI / 180.0f)
+#define SUCCESS_ANGULAR_VEL 1.0f
+#define SUCCESS_TIME 2.0f
+#define ALIVE_REWARD 2.0f
+#define TERMINATION_REWARD -5.0f
+#define POLE_POSITION_WEIGHT -0.2f
+#define CART_VELOCITY_WEIGHT -0.05f
+#define POLE_ANGULAR_VELOCITY_WEIGHT -0.05f
+#define CART_POSITION_WEIGHT -0.05f
+#define SUCCESS_REWARD 10.0f
 
 // render
 #define CART_WIDTH       40
@@ -72,6 +88,25 @@ typedef struct {
 extern EnvParams env;
 
 /**
+ * Status of the episode
+ */
+typedef enum {
+    EPISODE_RUNNING,
+    EPISODE_TERMINATED
+} EpisodeStatus;
+
+
+/**
+ * Task state to determine reward and episode completion
+ */
+typedef struct {
+    float episode_time;
+    float stable_time;
+    int success_given; // prevent success reward from given multiple times in same episode
+    EpisodeStatus status;
+} Agent;
+
+/**
  * SDL2 Renderer
  */
 typedef struct {
@@ -82,8 +117,23 @@ typedef struct {
     float pixels_per_meter;
 } Renderer;
 
+/**
+ * main running modes
+ */
+typedef enum {
+    MODE_MANUAL,
+    MODE_INTERFACE,
+    MODE_INTERFACE_HEADLESS
+} RunMode;
+
+
 void physics_init(State *state);
 void physics_step(State *state, float input_normalized, float dt);
+
+void agent_init(Agent *agent);
+float agent_get_reward(Agent *agent, const State *state, float dt);
+EpisodeStatus agent_get_status(const Agent *agent);
+
 int renderer_init(Renderer *r, int width, int height);
 void renderer_draw(Renderer *r, State *state);
 void renderer_destroy(Renderer *r);

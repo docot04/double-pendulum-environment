@@ -12,8 +12,6 @@ EnvParams env = {
 
 /**
  * Initialize the physical state
- * 
- * Starts the cart at rest and places the poles almost upright with a small random angular perturbation
  */
 void physics_init(State *state) {
 
@@ -24,10 +22,11 @@ void physics_init(State *state) {
     state->x = 0.0f;
     state->x_dot = 0.0f;
 
-    // initial pole angle (start upright with a slighht angular perturbation
-    // ([-0.02, 0.02] radians or approximately ±1.15 degrees))
-    state->t1 = ((float)rand() / RAND_MAX - 0.5f) * 0.04f;
-    state->t2 = ((float)rand() / RAND_MAX - 0.5f) * 0.04f;
+    // initial pole angle (start downward with a slighht angular perturbation
+    // state->t1 = ((float)rand() / RAND_MAX - 0.5f) * 0.04f; // upward position
+    // state->t2 = ((float)rand() / RAND_MAX - 0.5f) * 0.04f; // upward position
+    state->t1 = -PI + ((float)rand() / RAND_MAX - 0.5f) * 0.04f;
+    state->t2 = -PI + ((float)rand() / RAND_MAX - 0.5f) * 0.04f;
 
     // initial pole angular velocity
     state->t1_dot = 0.0f;
@@ -76,7 +75,7 @@ static void get_accels(const State *state, float F, float *x_acc, float *t1_acc,
 
     // Rotational inertia contribution of pole 1
     // d = (m1 + m2) * L1²
-    float d = (env.m1 + env.m2) * env.L1 * env.L1;
+    float d = (env.m1 + env.m2) * SQR(env.L1);
 
     // Coupling between pole 1 and pole 2
     // e = m2 * L1 * L2 * cos(t1-t2)
@@ -84,32 +83,32 @@ static void get_accels(const State *state, float F, float *x_acc, float *t1_acc,
 
     // Rotational inertia contribution of pole 2
     // f = m2 * L2²
-    float f = env.m2 * env.L2 * env.L2;
+    float f = env.m2 * SQR(env.L2);
 
     // FORCE VECTOR COMPONENTS
 
     // cart equation
     // u = F + [(m1 + m2) * L1 * t1_dot² * sin(t1)] + [m2 * L2 * t2_dot² * sin(t2)]
     // where term1 = force from agent, term2 = force from both poles, term3 = force from pole 2
-    float u = F + (env.m1 + env.m2) * env.L1 * state->t1_dot * state->t1_dot * st1 + env.m2 * env.L2 * state->t2_dot * state->t2_dot * st2;
+    float u = F + (env.m1 + env.m2) * env.L1 * SQR(state->t1_dot) * st1 + env.m2 * env.L2 * SQR(state->t2_dot) * st2;
 
     // pole 1 equation
     // v = [(m1 + m2) * g * L1 * sin(t1)] - [m2 * L1 * L2 * t2_dot² * sin(t1 - t2)]
     // where term1 = gravity, term2 = interaction caused by rotational motion of pole 2
-    float v = (env.m1 + env.m2) * env.g * env.L1 * st1 - env.m2 * env.L1 * env.L2 * state->t2_dot * state->t2_dot * s_diff;
+    float v = (env.m1 + env.m2) * env.g * env.L1 * st1 - env.m2 * env.L1 * env.L2 * SQR(state->t2_dot) * s_diff;
 
     // pole 2 equation
     // w = [m2 * g * L2 * sin(t2)] + [m2 * L1 * L2 * t1_dot² * sin(t1 - t2)]
     // where term1 = gravity, term2 = interaction with pole 1
-    float w = env.m2 * env.g * env.L2 * st2 + env.m2 * env.L1 * env.L2 * state->t1_dot * state->t1_dot * s_diff;
+    float w = env.m2 * env.g * env.L2 * st2 + env.m2 * env.L1 * env.L2 * SQR(state->t1_dot) * s_diff;
 
     // determinant of mass matrix: det(M)
     // det(M) = a(df - e²) - b(bf - ce) + c(be - cd)
-    float det = a * (d*f - e*e) - b * (b*f - c*e) + c * (b*e - c*d);
+    float det = a * (d*f - SQR(e)) - b * (b*f - c*e) + c * (b*e - c*d);
 
     // cart acceleration
     // x_ddot = [ u(df - e²) - b(vf - we) + c(ve - wd) ] / det(M)
-    *x_acc = (u * (d*f - e*e) - b * (v*f - w*e) + c * (v*e - w*d)) / det;
+    *x_acc = (u * (d*f - SQR(e)) - b * (v*f - w*e) + c * (v*e - w*d)) / det;
     
     // pole 1 angular acceleration
     // t1_ddot = [ a(vf - we) - u(bf - ce) + c(bw - cv) ] / det(M)
@@ -122,13 +121,6 @@ static void get_accels(const State *state, float F, float *x_acc, float *t1_acc,
 
 /**
  * Advance the physics simulation by dt seconds
- * 
- * 1. Input_normalized in range [-1, 1] converted into horizontal force (F = input_normalized * max_F)
- * 2. calculate accelerations
- * 3. integrate acceleration -> velocity
- * 4. apply slight numerical damping
- * 5. integrate velocity -> position
- * 6. normalize angles
  */
 void physics_step(State *state, float input_normalized,float dt) {
 
